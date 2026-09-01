@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'header.html' %}
+<style>
+
+input, button{
+    width: 250px;
+    border-color: blue;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+</style>
+<br><br>
+<div class="container">
+    <div class="row">
+        <center>
+            <div class="col-10">
+                <div class="login-form">
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        <p>
+                            آیا مطمئن هستید که می‌خواهید حساب کاربری خود را حذف کنید؟
+                        </p>
+
+                        <button type="submit" name="action" value="yes", id="yes" class="ask_bt">
+                            بله
+                        </button>
+
+                        <button type="submit" name="action" value="no" id="no" class="ask_bt">
+                            خیر
+                        </button>
+
+                    </form>
+                </div>
+            </div>
+        </center>
+    </div>
+</div>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+{% endblock %}

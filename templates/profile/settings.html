@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Header -->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">تنظیمات</h1>
+            <p class="lead fw-normal text-white-50 mb-0">اطلاعات خود را ویرایش کنید</p>
+        </div>
+    </div>
+</header>
+
+<style>
+
+.settings_choice{
+    width: 250px;
+    padding: 10px;
+    border-color: blue;
+    border-radius: 5px;
+    background-color: azure;
+}
+#delete_accont{
+    color: red;
+}
+
+
+</style>
+<br><br>
+<div class="container">
+    <div class="row">
+        <center>
+            <div class="col-10">
+                <div>
+                    <div class="settings_choice" >
+                            <a href="{% url 'update_username' %}" id="edite_username"> ویرایش نام کاربری</a>
+                    </div>
+                    <br>
+                    <div class="settings_choice" >
+                            <a href="{% url 'update_profile' %}"> ویرایش مشخصات</a>
+                    </div>
+                    <br>
+                    <div class="settings_choice" >
+                            <a href="{% url 'change_password' %}"> ویرایش پسورد</a>
+                    </div>
+                                        <br>
+                    <div class="settings_choice" >
+                            <a href="{% url 'logout' %}" id="delete_accont">خروج</a>
+                    </div>
+                    <br>
+                    <div class="settings_choice" >
+                            <a href="{% url 'delete_account' %}" id="delete_accont"> حذف حساب کاربری </a>
+                    </div>
+
+
+                </div>
+            </div>
+        </center>
+    </div>
+</div>
+<br><br>
+<br><br><br><br><br>
+
+
+{% endblock %}

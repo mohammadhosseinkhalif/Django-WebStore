@@ -1,0 +1,1239 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+
+<style>
+/* =========================================================
+   Product Reviews
+========================================================= */
+
+.product-reviews {
+    width: 100%;
+    margin-top: 50px;
+    padding: 30px;
+    border-radius: 15px;
+}
+
+.reviews-header {
+    margin-bottom: 30px;
+}
+
+.reviews-header h3 {
+    margin: 0;
+    font-size: 24px;
+}
+
+
+/* =========================================================
+   Review Form
+========================================================= */
+
+.review-form-box {
+    border: 1px solid #eee;
+    border-radius: 12px;
+}
+
+.review-form-box h5 {
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   Rating Input
+========================================================= */
+
+.rating-input {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    direction: ltr;
+}
+
+.review-star {
+    font-size: 30px;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.review-star:hover {
+    color: #f5b301;
+    transform: scale(1.1);
+}
+
+.review-star.bi-star-fill {
+    color: #f5b301;
+}
+
+
+/* =========================================================
+   Review List
+========================================================= */
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.review-item {
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+}
+
+
+/* =========================================================
+   Review Avatar
+========================================================= */
+
+.review-user-avatar {
+    width: 55px;
+    height: 55px;
+    flex-shrink: 0;
+}
+
+.review-user-avatar img {
+    width: 55px;
+    height: 55px;
+    object-fit: cover;
+}
+
+
+/* =========================================================
+   Empty Reviews
+========================================================= */
+
+.no-reviews {
+    padding: 30px;
+    text-align: center;
+    color: #777;
+}
+
+
+/* =========================================================
+   Review Stars
+========================================================= */
+
+.review-rating {
+    margin-bottom: 10px;
+}
+
+.review-rating i {
+    font-size: 18px;
+}
+
+
+/* =========================================================
+   Review Text
+========================================================= */
+
+.review-content {
+    line-height: 1.8;
+    color: #0011ff;
+}
+
+
+/* =========================================================
+   Gallery
+========================================================= */
+
+.thumbnail-img,
+.thumbnail-video {
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.thumbnail-img:hover,
+.thumbnail-video:hover {
+    transform: scale(1.03);
+}
+
+.thumbnail-img.active,
+.thumbnail-video.active {
+    border-color: #f5b301 !important;
+}
+
+.thumbnail-video {
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.thumbnail-video video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+</style>
+
+<!-- =========================================================
+     Product Details
+========================================================= -->
+
+<section class="product-detail-section py-5">
+
+
+<div class="container px-4 px-lg-5">
+
+    <div class="row gx-5 align-items-start">
+
+        <!-- =================================================
+             Product Gallery
+        ================================================== -->
+
+        <div class="col-md-6 mb-4 mb-md-0">
+
+            <div class="product-gallery">
+
+                <!-- Main Media -->
+                <div class="main-image position-relative mb-3">
+
+                    <img
+                        src="{{ product.pictures.url }}"
+                        alt="{{ product.name }}"
+                        class="img-fluid rounded-3 shadow-sm"
+                        id="mainProductImage"
+                        loading="lazy"
+                    >
+
+                    {% if media_list|length > 1 %}
+
+                        <!-- Previous -->
+                        <button
+                            type="button"
+                            class="btn btn-dark btn-sm position-absolute top-50 start-0 translate-middle-y ms-2"
+                            id="prevImageBtn"
+                            style="
+                                z-index:5;
+                                background:rgba(0,0,0,0.5);
+                                border:none;
+                                border-radius:50%;
+                                width:40px;
+                                height:40px;
+                            "
+                        >
+                            <i class="bi-chevron-right"></i>
+                        </button>
+
+                        <!-- Next -->
+                        <button
+                            type="button"
+                            class="btn btn-dark btn-sm position-absolute top-50 end-0 translate-middle-y me-2"
+                            id="nextImageBtn"
+                            style="
+                                z-index:5;
+                                background:rgba(0,0,0,0.5);
+                                border:none;
+                                border-radius:50%;
+                                width:40px;
+                                height:40px;
+                            "
+                        >
+                            <i class="bi-chevron-left"></i>
+                        </button>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Thumbnails -->
+                <div class="thumbnails-wrapper">
+
+                    <div
+                        class="thumbnails d-flex gap-2 overflow-auto pb-2"
+                        id="thumbnailsContainer"
+                    >
+
+                        <!-- Images -->
+                        {% for media in media_list %}
+
+                            {% if media.media_type == 'image' %}
+
+                                <img
+                                    src="{{ media.file.url }}"
+                                    alt="{{ media.alt_text|default:product.name }}"
+                                    class="thumbnail-img rounded-2 flex-shrink-0"
+                                    data-media-type="image"
+                                    data-media-url="{{ media.file.url }}"
+                                    style="
+                                        width:80px;
+                                        height:80px;
+                                        object-fit:cover;
+                                        cursor:pointer;
+                                    "
+                                    loading="lazy"
+                                >
+
+                            {% endif %}
+
+                        {% endfor %}
+
+
+                        <!-- Videos -->
+                        {% for media in media_list %}
+
+                            {% if media.media_type == 'video' %}
+
+                                <div
+                                    class="thumbnail-video flex-shrink-0 position-relative"
+                                    data-media-type="video"
+                                    data-media-url="{{ media.file.url }}"
+                                    style="
+                                        width:80px;
+                                        height:80px;
+                                        cursor:pointer;
+                                    "
+                                >
+
+                                    <video
+                                        src="{{ media.file.url }}"
+                                        preload="none"
+                                    ></video>
+
+                                    <div
+                                        class="
+                                            play-icon
+                                            position-absolute
+                                            top-50
+                                            start-50
+                                            translate-middle
+                                            bg-dark
+                                            bg-opacity-50
+                                            rounded-circle
+                                            d-flex
+                                            align-items-center
+                                            justify-content-center
+                                        "
+                                        style="
+                                            width:30px;
+                                            height:30px;
+                                        "
+                                    >
+                                        <i
+                                            class="bi-play-fill text-white"
+                                            style="font-size:20px;"
+                                        ></i>
+                                    </div>
+
+                                </div>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+
+                        {% if not media_list %}
+
+                            <p class="text-muted">
+                                هیچ رسانه‌ای برای این محصول موجود نیست.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             Product Information
+        ================================================== -->
+
+        <div class="col-md-6">
+
+            <div class="product-info">
+
+                <!-- Product Name -->
+                <h1 class="display-6 fw-bolder text-gold">
+                    {{ product.name }}
+                </h1>
+
+
+                <!-- Product Score -->
+                {% if product.score %}
+
+                    <div class="d-flex align-items-center gap-2 mb-2">
+
+                        <div class="text-warning small">
+
+                            {% with ''|center:product.score as score_range %}
+
+                                {% for _ in score_range %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% endfor %}
+
+                            {% endwith %}
+
+                        </div>
+
+                        <span class="text-muted">
+                            ({{ product.review_count|default:"۰" }} نظر)
+                        </span>
+
+                    </div>
+
+                {% endif %}
+
+
+                <!-- Price -->
+                <div class="price-box mb-3">
+
+                    {% if product.discounted %}
+
+                        <span class="text-muted text-decoration-line-through fs-5">
+                            {{ product.price|intcomma }} تومان
+                        </span>
+
+                        <span class="fs-2 fw-bold text-gold me-2">
+                            {{ product.discounted_price|intcomma }} تومان
+                        </span>
+
+                        <span class="badge bg-gold text-dark ms-2">
+                            تخفیف ویژه
+                        </span>
+
+                    {% else %}
+
+                        <span class="fs-2 fw-bold text-gold">
+                            {{ product.price|intcomma }} تومان
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Description -->
+                <div class="description mb-4">
+
+                    <h5 class="fw-bold">
+                        توضیحات محصول
+                    </h5>
+
+                    <p class="text-muted">
+                        {{ product.description|default:"توضیحاتی برای این محصول موجود نیست." }}
+                    </p>
+
+                </div>
+
+
+                <!-- Actions -->
+                <div class="actions d-flex flex-wrap gap-3">
+
+                    {% if in_cart %}
+
+                        <button
+                            type="button"
+                            class="btn btn-gold btn-lg px-5"
+                            id="addToCartBtn"
+                            value="{{ product.id }}"
+                        >
+                            <i class="bi bi-cart-plus me-2"></i>
+                            افزودن به سبد خرید
+                        </button>
+
+                    {% else %}
+
+                        <button
+                            type="button"
+                            class="btn btn-gold btn-lg px-5"
+                            id="removeToCartBtn"
+                            value="{{ product.id }}"
+                        >
+                            <i class="bi bi-cart-plus me-2"></i>
+                            حذف از سبد خرید
+                        </button>
+
+                    {% endif %}
+
+
+                    {% if not is_like %}
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-gold btn-lg px-4"
+                            id="addLike"
+                        >
+                            <i class="bi bi-heart me-2"></i>
+                            علاقه‌مندی
+                        </button>
+
+                    {% else %}
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-gold btn-lg px-4"
+                            id="deleteLike"
+                        >
+                            <i class="bi bi-heart-fill me-2"></i>
+                            علاقه‌مندی
+                        </button>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Extra Information -->
+                <div class="extra-info mt-4 pt-3 border-top border-secondary">
+
+                    <div class="row text-muted small">
+
+                        <div class="col-6">
+
+                            <i class="bi bi-check-circle-fill text-gold me-1"></i>
+
+                            موجودی:
+
+                            <span class="text-light">
+
+                                {% if product.stock %}
+                                    {{ product.stock }}
+                                {% else %}
+                                    ناموجود
+                                {% endif %}
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="col-6">
+
+                            <i class="bi bi-tag-fill text-gold me-1"></i>
+
+                            برند:
+
+                            <span class="text-light">
+                                {{ product.brand|default:"نامشخص" }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<hr>
+
+<!-- =========================================================
+     Product Reviews
+========================================================= -->
+
+<section class="product-reviews py-5">
+
+<div class="container px-4 px-lg-5">
+
+
+    <!-- Reviews Header -->
+    <div class="reviews-header">
+
+        <h3 class="fw-bold text-gold">
+            نظرات کاربران
+        </h3>
+
+        <p class="text-muted">
+            نظر کاربران درباره این محصول
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         Review Form
+    ====================================================== -->
+
+    {% if user.is_authenticated %}
+
+        <div class="review-form-box p-4 mb-5">
+
+            {% if user_review %}
+
+                <h5>
+                    ویرایش نظر شما
+                </h5>
+
+            {% else %}
+
+                <h5>
+                    نظر خود را درباره این محصول بنویسید
+                </h5>
+
+            {% endif %}
+
+
+            <form
+                id="reviewForm"
+                method="post"
+                action="{% url 'add_review' product.id %}"
+            >
+
+                {% csrf_token %}
+
+
+                <!-- Rating -->
+                <div class="mb-4">
+
+                    <label class="form-label">
+                        امتیاز شما
+                    </label>
+
+
+                    <div
+                        class="rating-input"
+                        id="ratingInput"
+                    >
+
+                        {% for i in "12345" %}
+
+                            <i
+                                class="bi bi-star review-star"
+                                data-score="{{ forloop.counter }}"
+                                role="button"
+                                aria-label="امتیاز {{ forloop.counter }} از ۵"
+                            ></i>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <!--
+                        مقدار واقعی امتیاز اینجا ذخیره می‌شود.
+                        مقدار آن همیشه یک عدد صحیح بین 1 و 5 است.
+                    -->
+
+                    <input
+                        type="hidden"
+                        name="score"
+                        id="reviewScore"
+                        value="{% if user_review %}{{ user_review.star }}{% endif %}"
+                    >
+
+                </div>
+
+
+                <!-- Comment -->
+                <div class="mb-3">
+
+                    <textarea
+                        name="comment"
+                        id="reviewComment"
+                        class="form-control"
+                        rows="4"
+                        placeholder="نظر خود را درباره این محصول بنویسید..."
+                    >{% if user_review %}{{ user_review.text }}{% endif %}</textarea>
+
+                </div>
+
+
+                <!-- Submit -->
+                {% if user_review %}
+
+                نظر ثبت شده است
+
+                {% else %}
+
+                    <button
+                        type="submit"
+                        id="submitReviewBtn"
+                        class="btn btn-gold px-4"
+                    >
+                        ثبت نظر
+                    </button>
+
+                {% endif %}
+
+            </form>
+
+        </div>
+
+
+    {% else %}
+
+        <div class="alert alert-secondary">
+            برای ثبت نظر ابتدا وارد حساب کاربری خود شوید.
+        </div>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         Reviews List
+    ====================================================== -->
+
+    <div class="reviews-list">
+
+        {% for review in reviews %}
+
+            <div class="review-item">
+
+                <div class="d-flex align-items-start gap-3">
+
+
+                    <!-- Avatar -->
+                    <div class="review-user-avatar">
+
+                        {% if review.user.profile.avatar %}
+
+                            <img
+                                src="{{ review.user.profile.avatar.url }}"
+                                alt="{{ review.user.username }}"
+                                class="rounded-circle"
+                            >
+
+                        {% else %}
+
+                            <div
+                                class="
+                                    rounded-circle
+                                    d-flex
+                                    align-items-center
+                                    justify-content-center
+                                "
+                                style="
+                                    width:55px;
+                                    height:55px;
+                                "
+                            >
+                                <i class="bi bi-person fs-4"></i>
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Review Information -->
+                    <div class="flex-grow-1">
+
+                        <!-- Username -->
+                        <div class="fw-bold mb-1">
+                            <a href="{% url 'profile' review.user.id %}">{{ review.user.username }}</a>
+                        </div>
+
+
+                        <!-- Rating -->
+                        <div class="review-rating text-warning">
+
+                            {% for i in "12345" %}
+
+                                {% if forloop.counter <= review.star %}
+
+                                    <i class="bi bi-star-fill"></i>
+
+                                {% else %}
+
+                                    <i class="bi bi-star"></i>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Review Text -->
+                        <p class="review-content text-muted mb-0" style="color: #0011ff;">
+                            {{ review.text }}
+                        </p>
+
+                        <!-- عملیات نظر -->
+                        {% if user.is_authenticated and review.user == user %}
+                            <div class="review-actions mt-3 d-flex gap-2">
+
+                                <form
+                                    method="post"
+                                    action="{% url 'delete_review' review.id %}"
+                                    style="display: inline;"
+                                    onsubmit="return confirm('آیا مطمئن هستید که می‌خواهید این نظر را حذف کنید؟');"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                        حذف نظر
+                                    </button>
+
+                                </form>
+
+                            </div>
+                        {% endif %}
+
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        {% empty %}
+
+            <div class="no-reviews">
+
+                <i class="bi bi-chat-square-text fs-1 text-muted"></i>
+
+                <p class="text-muted mt-3 mb-0">
+                    هنوز نظری برای این محصول ثبت نشده است.
+                </p>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+</section>
+
+<!-- =========================================================
+     JavaScript
+========================================================= -->
+
+<script>
+
+$(document).ready(function () {
+
+
+    /* =========================================================
+       Add Like
+    ========================================================= */
+
+    $(document).on('click', '#addLike', function (e) {
+
+        e.preventDefault();
+
+        $.ajax({
+
+            type: 'POST',
+
+            url: "{% url 'like_product' product.pk %}",
+
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+
+            success: function () {
+                location.reload();
+            },
+
+            error: function (xhr) {
+                console.log(xhr.responseText);
+            }
+
+        });
+
+    });
+
+
+    /* =========================================================
+       Delete Like
+    ========================================================= */
+
+    $(document).on('click', '#deleteLike', function (e) {
+
+        e.preventDefault();
+
+        $.ajax({
+
+            type: 'POST',
+
+            url: "{% url 'delete_like' product.pk %}",
+
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+
+            success: function () {
+                location.reload();
+            },
+
+            error: function (xhr) {
+                console.log(xhr.responseText);
+            }
+
+        });
+
+    });
+
+
+    /* =========================================================
+       Add To Cart
+    ========================================================= */
+
+    $(document).on('click', '#addToCartBtn', function (e) {
+
+        e.preventDefault();
+
+        const $button = $(this);
+
+        $.ajax({
+
+            type: 'POST',
+
+            url: "{% url 'add' %}",
+
+            data: {
+                product_id: $button.val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+
+            success: function (response) {
+
+                const cartQuantity = document.getElementById('cart-quantity');
+
+                if (cartQuantity) {
+                    cartQuantity.textContent = response.cart_quantity;
+                }
+
+                location.reload();
+
+            },
+
+            error: function () {
+                alert('خطا در افزودن به سبد خرید');
+            }
+
+        });
+
+    });
+
+
+    /* =========================================================
+       Remove From Cart
+    ========================================================= */
+
+    $(document).on('click', '#removeToCartBtn', function (e) {
+
+        e.preventDefault();
+
+        const $button = $(this);
+
+        $.ajax({
+
+            type: 'POST',
+
+            url: "{% url 'remove' %}",
+
+            data: {
+                product_id: $button.val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+
+            success: function (response) {
+
+                const cartQuantity = document.getElementById('cart-quantity');
+
+                if (cartQuantity) {
+                    cartQuantity.textContent = response.cart_quantity;
+                }
+
+                location.reload();
+
+            },
+
+            error: function () {
+                alert('خطا در حذف از سبد خرید');
+            }
+
+        });
+
+    });
+
+
+    /* =========================================================
+       Product Gallery
+    ========================================================= */
+
+    const $mainImage = $('#mainProductImage');
+    const $thumbnails = $('#thumbnailsContainer');
+
+    let currentMediaIndex = 0;
+    const mediaItems = [];
+
+
+    // Collect media items
+    $thumbnails.find('[data-media-url]').each(function () {
+
+        mediaItems.push({
+
+            type: $(this).data('media-type'),
+
+            url: $(this).data('media-url'),
+
+            element: $(this)
+
+        });
+
+    });
+
+
+    // Change main media
+    function setMedia(index) {
+
+        if (!mediaItems.length) {
+            return;
+        }
+
+
+        if (index < 0) {
+            index = mediaItems.length - 1;
+        }
+
+
+        if (index >= mediaItems.length) {
+            index = 0;
+        }
+
+
+        currentMediaIndex = index;
+
+        const item = mediaItems[index];
+
+
+        // Image
+        if (item.type === 'image') {
+
+            $mainImage
+                .attr('src', item.url)
+                .show();
+
+
+            $mainImage
+                .siblings('video')
+                .remove();
+
+        }
+
+
+        // Video
+        else if (item.type === 'video') {
+
+            $mainImage.hide();
+
+            let $video = $mainImage.siblings('video');
+
+
+            if (!$video.length) {
+
+                $video = $(
+                    '<video controls preload="metadata" ' +
+                    'class="img-fluid rounded-3 shadow-sm" ' +
+                    'style="' +
+                    'width:100%;' +
+                    'height:400px;' +
+                    'object-fit:contain;' +
+                    'border-radius:20px;' +
+                    '">' +
+                    '</video>'
+                );
+
+                $mainImage.after($video);
+
+            }
+
+
+            $video.attr('src', item.url);
+
+            $video[0].load();
+
+        }
+
+
+        // Active thumbnail
+        $thumbnails
+            .find('.thumbnail-img, .thumbnail-video')
+            .removeClass('active');
+
+        item.element.addClass('active');
+
+
+        // Scroll active thumbnail into view
+        const container = $thumbnails[0];
+        const activeElement = item.element[0];
+
+
+        if (container && activeElement) {
+
+            const containerRect = container.getBoundingClientRect();
+            const activeRect = activeElement.getBoundingClientRect();
+
+
+            if (
+                activeRect.left < containerRect.left ||
+                activeRect.right > containerRect.right
+            ) {
+
+                activeElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+
+            }
+
+        }
+
+    }
+
+
+    // Thumbnail click
+    $thumbnails.on(
+        'click',
+        '[data-media-url]',
+        function () {
+
+            const clickedUrl = $(this).data('media-url');
+
+            const index = mediaItems.findIndex(
+                item => item.url === clickedUrl
+            );
+
+
+            if (index !== -1) {
+                setMedia(index);
+            }
+
+        }
+    );
+
+
+    // Previous button
+    $('#prevImageBtn').on('click', function () {
+
+        setMedia(currentMediaIndex - 1);
+
+    });
+
+
+    // Next button
+    $('#nextImageBtn').on('click', function () {
+
+        setMedia(currentMediaIndex + 1);
+
+    });
+
+
+    // Initialize gallery
+    if (mediaItems.length > 0) {
+        setMedia(0);
+    }
+
+
+    /* =========================================================
+       Review Star Rating
+    ========================================================= */
+
+    const $reviewStars = $('.review-star');
+    const $reviewScore = $('#reviewScore');
+
+
+    // Set visual state of stars
+    function setReviewStars(score) {
+
+        score = parseInt(score, 10);
+
+
+        if (isNaN(score) || score < 1 || score > 5) {
+
+            $reviewStars
+                .removeClass('bi-star-fill')
+                .addClass('bi-star');
+
+            return;
+        }
+
+
+        $reviewStars.each(function () {
+
+            const starScore = parseInt(
+                $(this).data('score'),
+                10
+            );
+
+
+            if (starScore <= score) {
+
+                $(this)
+                    .removeClass('bi-star')
+                    .addClass('bi-star-fill');
+
+            } else {
+
+                $(this)
+                    .removeClass('bi-star-fill')
+                    .addClass('bi-star');
+
+            }
+
+        });
+
+    }
+
+
+    // User selects a rating
+    $reviewStars.on('click', function () {
+
+        const selectedScore = parseInt(
+            $(this).data('score'),
+            10
+        );
+
+
+        // Save integer score
+        $reviewScore.val(selectedScore);
+
+
+        // Update stars
+        setReviewStars(selectedScore);
+
+    });
+
+
+    // Show existing rating when editing
+    const existingScore = parseInt(
+        $reviewScore.val(),
+        10
+    );
+
+
+    if (
+        !isNaN(existingScore) &&
+        existingScore >= 1 &&
+        existingScore <= 5
+    ) {
+
+        setReviewStars(existingScore);
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

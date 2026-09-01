@@ -1,0 +1,553 @@
+{% extends "base.html"%}
+{% load static %}
+{% load humanize %}
+
+
+
+
+
+{% block content %}
+
+
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">سبد خرید</h1>
+            <p class="lead fw-normal text-white-50 mb-0">خریدی شیک و مطمئن با بهترین قیمت‌ها</p>
+        </div>
+    </div>
+</header>
+
+
+<section class="py-5">
+<div class="container px-4 px-lg-5 mt-5">
+    <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+        {% for item in products %}
+            {% if item.discounted %}
+            <div class="col mb-5">
+                <div class="card h-100">
+                    <!-- برچسب تخفیف -->
+                    <div class="badge bg-dark text-white position-absolute" style="top: 0.5rem; right: 0.5rem;">🔥 تخفیف ویژه</div>
+                    <!-- تصویر محصول -->
+                    <img class="card-img-top" src="{{ item.pictures.url }}" alt="تصویر محصول" >
+                    <!-- جزئیات محصول -->
+                    <div class="card-body p-4">
+                        <div class="text-center">
+                            <p class="fw-bolder">{{ item.name }}</p>
+                            <!-- امتیاز -->
+                            {% if item.score != 0 %}
+                            <div class="d-flex justify-content-center small text-warning mb-2">
+                                {% with ''|center:item.score as range %}
+                                {% for _ in range %}
+                                <div class="bi-star-fill"></div>
+                                {% endfor %}
+                                {% endwith %}
+                            </div>
+                            {% endif %}
+                            <!-- قیمت -->
+                            <span class="text-muted text-decoration-line-through">{{ item.price |intcomma }}<br></span>
+                            <span class="fw-bolder">{{ item.discounted_price |intcomma }} تومان</span>
+                        </div>
+                    </div>
+                    <!-- دکمه اقدام -->
+                    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                        <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="{% url 'product_details' item.id %}">مشاهده</a></div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col mb-5">
+                <div class="card h-100">
+                    <img class="card-img-top" src="{{ item.pictures.url }}" alt="تصویر محصول" />
+                    <div class="card-body p-4">
+                        <div class="text-center">
+                            <p class="fw-bolder">{{ item.name }}</p>
+                            {% if item.score != 0 %}
+                            <div class="d-flex justify-content-center small text-warning mb-2">
+                                {% with ''|center:item.score as range %}
+                                {% for _ in range %}
+                                <div class="bi-star-fill"></div>
+                                {% endfor %}
+                                {% endwith %}
+                            </div>
+                            {% endif %}
+                            <span class="fw-bolder">{{ item.price |intcomma }} تومان</span>
+                        </div>
+                    </div>
+                    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                        <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="{% url 'product_details' item.id %}">مشاهده</a></div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% empty %}
+            <div class="col-12 text-center text-muted py-5">
+                <i class="bi bi-inbox display-1 d-block mb-3"></i>
+                <h4>سبد خرید خالی است</h4>
+                <br><br><br>
+            </div>
+        {% endfor %}
+    </div>
+    <br><br><br><br>
+</div>
+</section>
+
+
+<script>
+// ===== سبد خرید =====
+ $(document).on('click', '#addToCartBtn', function(e){
+    e.preventDefault();
+    const $btn = $(this);
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'add'%}",
+        data: {
+            product_id: $btn.val(),
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(response) {
+            console.log(response.cart_quantity)
+            window.location.href = "{% url 'home' %}";
+            document.getElementById('cart-quantity').textContent = response.cart_quantity
+        },
+        error: function() {
+            alert('خطا در افزودن به سبد خرید');
+        }
+    });
+});
+
+ $(document).on('click', '#removeToCartBtn', function(e){
+    e.preventDefault();
+    const $btn = $(this);
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'remove'%}",
+        data: {
+            product_id: $btn.val(),
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(response) {
+            console.log(response.cart_quantity)
+            window.location.href = "{% url 'home' %}";
+            document.getElementById('cart-quantity').textContent = response.cart_quantity
+        },
+        error: function() {
+            alert('خطا در حذف از سبد خرید');
+        }
+    });
+});
+
+
+// ===== گالری محصول + ویدیو پلیر گیمینگ =====
+ $(document).ready(function() {
+    const $mainImage = $('#mainProductImage');
+    const $thumbnails = $('#thumbnailsContainer');
+    let currentMediaIndex = 0;
+    let mediaItems = [];
+    let currentPlayer = null;
+
+    // جمع‌آوری آیتم‌های رسانه‌ای
+    $thumbnails.find('[data-media-url]').each(function() {
+        mediaItems.push({
+            type: $(this).data('media-type'),
+            url: $(this).data('media-url'),
+            element: $(this)
+        });
+    });
+
+    // ---- فرمت زمان ----
+    function formatTime(s) {
+        if (isNaN(s) || !isFinite(s)) return '0:00';
+        var m = Math.floor(s / 60);
+        var sec = Math.floor(s % 60);
+        return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    // ---- ساخت پلیر گیمینگ ----
+    function createGamingPlayer() {
+        var $player = $(
+            '<div class="gaming-player">' +
+                '<video preload="metadata" playsinline></video>' +
+                '<div class="gp-overlay">' +
+                    '<div class="gp-overlay-play"><i class="bi-play-fill"></i></div>' +
+                    '<div class="gp-loading"><div class="gp-spinner"></div></div>' +
+                '</div>' +
+                '<div class="gp-controls">' +
+                    '<div class="gp-progress-bar">' +
+                        '<div class="gp-progress-buffered"></div>' +
+                        '<div class="gp-progress-fill"></div>' +
+                        '<div class="gp-progress-handle"></div>' +
+                    '</div>' +
+                    '<div class="gp-controls-row">' +
+                        '<div class="gp-controls-left">' +
+                            '<button class="gp-btn gp-play-btn" title="پخش / توقف (Space)"><i class="bi-play-fill"></i></button>' +
+                            '<span class="gp-time"><span class="gp-current">0:00</span> / <span class="gp-duration">0:00</span></span>' +
+                        '</div>' +
+                        '<div class="gp-controls-right">' +
+                            '<div class="gp-volume-wrap">' +
+                                '<button class="gp-btn gp-volume-btn" title="صدا (M)"><i class="bi-volume-up-fill"></i></button>' +
+                                '<div class="gp-volume-bar">' +
+                                    '<div class="gp-volume-fill"></div>' +
+                                    '<div class="gp-volume-handle"></div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<button class="gp-btn gp-fullscreen-btn" title="تمام‌صفحه (F)"><i class="bi-arrows-fullscreen"></i></button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>'
+        );
+        initGamingPlayer($player);
+        return $player;
+    }
+
+    // ---- مقداردهی پلیر ----
+    function initGamingPlayer($player) {
+        var video       = $player.find('video')[0];
+        var $overlay    = $player.find('.gp-overlay');
+        var $overlayPlay= $player.find('.gp-overlay-play');
+        var $loading    = $player.find('.gp-loading');
+        var $playBtn    = $player.find('.gp-play-btn');
+        var $progressBar= $player.find('.gp-progress-bar');
+        var $progressFill=$player.find('.gp-progress-fill');
+        var $progressBuf= $player.find('.gp-progress-buffered');
+        var $progressHdl= $player.find('.gp-progress-handle');
+        var $current    = $player.find('.gp-current');
+        var $duration   = $player.find('.gp-duration');
+        var $volumeBtn  = $player.find('.gp-volume-btn');
+        var $volumeBar  = $player.find('.gp-volume-bar');
+        var $volumeFill = $player.find('.gp-volume-fill');
+        var $volumeHdl  = $player.find('.gp-volume-handle');
+        var $fsBtn      = $player.find('.gp-fullscreen-btn');
+
+        var isSeeking       = false;
+        var isVolumeSeeking = false;
+        var controlsTimer   = null;
+
+        // نمایش خودکار کنترل‌ها
+        function showControls() {
+            $player.addClass('controls-visible');
+            clearTimeout(controlsTimer);
+            controlsTimer = setTimeout(function() {
+                if (!video.paused) {
+                    $player.removeClass('controls-visible');
+                }
+            }, 3000);
+        }
+
+        // آیکون پخش/توقف
+        function updatePlayIcon() {
+            var cls = video.paused ? 'bi-play-fill' : 'bi-pause-fill';
+            $playBtn.find('i').attr('class', 'bi ' + cls);
+            $overlayPlay.find('i').attr('class', 'bi ' + cls);
+            $overlayPlay.css('opacity', video.paused ? '1' : '0');
+        }
+
+        // پخش/توقف
+        function togglePlay() {
+            if (video.paused) {
+                video.play().catch(function(){});
+            } else {
+                video.pause();
+            }
+        }
+
+        // ---- رویداد ویدیو ----
+        video.addEventListener('play', function() {
+            updatePlayIcon();
+            showControls();
+        });
+        video.addEventListener('pause', function() {
+            updatePlayIcon();
+            $player.addClass('controls-visible');
+            clearTimeout(controlsTimer);
+        });
+        video.addEventListener('ended', function() {
+            updatePlayIcon();
+            $player.addClass('controls-visible');
+            clearTimeout(controlsTimer);
+        });
+
+        video.addEventListener('loadedmetadata', function() {
+            $duration.text(formatTime(video.duration));
+        });
+
+        video.addEventListener('timeupdate', function() {
+            if (!isSeeking && video.duration) {
+                var pct = (video.currentTime / video.duration) * 100;
+                $progressFill.css('width', pct + '%');
+                $progressHdl.css('left', pct + '%');
+                $current.text(formatTime(video.currentTime));
+            }
+        });
+
+        video.addEventListener('progress', function() {
+            if (video.buffered.length > 0 && video.duration) {
+                var end = video.buffered.end(video.buffered.length - 1);
+                $progressBuf.css('width', (end / video.duration) * 100 + '%');
+            }
+        });
+
+        video.addEventListener('waiting', function() { $loading.show(); });
+        video.addEventListener('canplay', function() { $loading.hide(); });
+        video.addEventListener('playing', function() { $loading.hide(); });
+
+        // ---- کلیک پخش ----
+        $playBtn.on('click', function(e) { e.stopPropagation(); togglePlay(); });
+        $overlayPlay.on('click', function(e) { e.stopPropagation(); togglePlay(); });
+        video.addEventListener('click', function() { togglePlay(); });
+        video.addEventListener('dblclick', function() { toggleFullscreen($player, $fsBtn); });
+
+        // تاچ برای نمایش کنترل‌ها
+        $player.on('touchstart', function() { showControls(); });
+
+        // ---- تایم‌لاین (پراگرس بار) ----
+        function seekTo(e) {
+            var rect = $progressBar[0].getBoundingClientRect();
+            var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            var x = clientX - rect.left;
+            x = Math.max(0, Math.min(x, rect.width));
+            var pct = x / rect.width;
+            if (video.duration && isFinite(video.duration)) {
+                video.currentTime = pct * video.duration;
+            }
+            $progressFill.css('width', (pct * 100) + '%');
+            $progressHdl.css('left', (pct * 100) + '%');
+            $current.text(formatTime(video.currentTime));
+        }
+
+        $progressBar.on('mousedown touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            isSeeking = true;
+            $progressBar.addClass('dragging');
+            seekTo(e);
+            showControls();
+        });
+
+        // ---- ولوم ----
+        function updateVolumeIcon() {
+            var icon;
+            if (video.muted || video.volume === 0) {
+                icon = 'bi-volume-mute-fill';
+            } else if (video.volume < 0.5) {
+                icon = 'bi-volume-low-fill';
+            } else {
+                icon = 'bi-volume-up-fill';
+            }
+            $volumeBtn.find('i').attr('class', 'bi ' + icon);
+        }
+
+        function volumeSeekTo(e) {
+            var rect = $volumeBar[0].getBoundingClientRect();
+            var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            var x = clientX - rect.left;
+            x = Math.max(0, Math.min(x, rect.width));
+            var pct = x / rect.width;
+            video.volume = pct;
+            video.muted = false;
+            $volumeFill.css('width', (pct * 100) + '%');
+            $volumeHdl.css('left', (pct * 100) + '%');
+            updateVolumeIcon();
+        }
+
+        $volumeBtn.on('click', function(e) {
+            e.stopPropagation();
+            video.muted = !video.muted;
+            if (video.muted) {
+                $volumeFill.css('width', '0%');
+                $volumeHdl.css('left', '0%');
+            } else {
+                $volumeFill.css('width', (video.volume * 100) + '%');
+                $volumeHdl.css('left', (video.volume * 100) + '%');
+            }
+            updateVolumeIcon();
+        });
+
+        $volumeBar.on('mousedown touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            isVolumeSeeking = true;
+            volumeSeekTo(e);
+        });
+
+        // ولوم اولیه
+        video.volume = 0.8;
+        $volumeFill.css('width', '80%');
+        $volumeHdl.css('left', '80%');
+
+        // ---- تمام‌صفحه ----
+        function toggleFullscreen($p, $btn) {
+            var el = $p[0];
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+                if (fn) fn.call(el);
+            } else {
+                var fn2 = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+                if (fn2) fn2.call(document);
+            }
+        }
+
+        $fsBtn.on('click', function(e) {
+            e.stopPropagation();
+            toggleFullscreen($player, $fsBtn);
+        });
+
+        document.addEventListener('fullscreenchange', handleFSChange);
+        document.addEventListener('webkitfullscreenchange', handleFSChange);
+
+        function handleFSChange() {
+            var isFS = document.fullscreenElement === $player[0] || document.webkitFullscreenElement === $player[0];
+            $fsBtn.find('i').attr('class', isFS ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen');
+        }
+
+        // ---- رویدادهای سراسری ماوس/تاچ ----
+        $(document).on('mousemove.gp touchmove.gp', function(e) {
+            if (isSeeking) {
+                e.preventDefault();
+                seekTo(e);
+            }
+            if (isVolumeSeeking) {
+                e.preventDefault();
+                volumeSeekTo(e);
+            }
+        });
+
+        $(document).on('mouseup.gp touchend.gp', function() {
+            if (isSeeking) {
+                isSeeking = false;
+                $progressBar.removeClass('dragging');
+            }
+            if (isVolumeSeeking) {
+                isVolumeSeeking = false;
+            }
+        });
+
+        // ---- کیبورد ----
+        $(document).on('keydown.gp', function(e) {
+            if (!currentPlayer || currentPlayer[0] !== $player[0]) return;
+            if ($(e.target).is('input, textarea, select, [contenteditable]')) return;
+
+            switch(e.key) {
+                case ' ':
+                case 'k':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    if (video.duration) video.currentTime = Math.min(video.currentTime + 5, video.duration);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    video.currentTime = Math.max(video.currentTime - 5, 0);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    video.volume = Math.min(video.volume + 0.1, 1);
+                    $volumeFill.css('width', (video.volume * 100) + '%');
+                    $volumeHdl.css('left', (video.volume * 100) + '%');
+                    updateVolumeIcon();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    video.volume = Math.max(video.volume - 0.1, 0);
+                    $volumeFill.css('width', (video.volume * 100) + '%');
+                    $volumeHdl.css('left', (video.volume * 100) + '%');
+                    updateVolumeIcon();
+                    break;
+                case 'f':
+                    e.preventDefault();
+                    toggleFullscreen($player, $fsBtn);
+                    break;
+                case 'm':
+                    e.preventDefault();
+                    $volumeBtn.click();
+                    break;
+            }
+        });
+
+        // ذخیره رفرنس
+        currentPlayer = $player;
+
+        // پاک‌سازی وقتی پلیر حذف می‌شود
+        $player.on('remove', function() {
+            $(document).off('.gp');
+            document.removeEventListener('fullscreenchange', handleFSChange);
+            document.removeEventListener('webkitfullscreenchange', handleFSChange);
+            clearTimeout(controlsTimer);
+            if (currentPlayer && currentPlayer[0] === $player[0]) {
+                currentPlayer = null;
+            }
+        });
+    }
+
+    // ---- تابع تغییر رسانه ----
+    function setMedia(index) {
+        if (index < 0) index = mediaItems.length - 1;
+        if (index >= mediaItems.length) index = 0;
+        currentMediaIndex = index;
+
+        var item = mediaItems[index];
+        if (item.type === 'image') {
+            // توقف و حذف پلیر قبلی
+            $mainImage.siblings('.gaming-player').each(function() {
+                var v = $(this).find('video')[0];
+                if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+                $(this).remove();
+            });
+            currentPlayer = null;
+            $mainImage.attr('src', item.url).show();
+        } else if (item.type === 'video') {
+            $mainImage.hide();
+            var $player = $mainImage.siblings('.gaming-player');
+            if ($player.length === 0) {
+                $player = createGamingPlayer();
+                $mainImage.after($player);
+            }
+            var video = $player.find('video')[0];
+            video.src = item.url;
+            video.load();
+            currentPlayer = $player;
+        }
+
+        // فعال‌سازی بند
+        $thumbnails.find('.thumbnail-img, .thumbnail-video').removeClass('active');
+        item.element.addClass('active');
+
+        // اسکرول به بند فعال
+        var container = $thumbnails[0];
+        var activeEl = item.element[0];
+        if (activeEl) {
+            var cRect = container.getBoundingClientRect();
+            var aRect = activeEl.getBoundingClientRect();
+            if (aRect.left < cRect.left || aRect.right > cRect.right) {
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+    }
+
+    // ---- کلیک بندها ----
+    $thumbnails.on('click', '[data-media-url]', function() {
+        var url = $(this).data('media-url');
+        var idx = -1;
+        for (var i = 0; i < mediaItems.length; i++) {
+            if (mediaItems[i].url === url) { idx = i; break; }
+        }
+        if (idx !== -1) setMedia(idx);
+    });
+
+    // ---- دکمه‌های ناوبری ----
+    $('#prevImageBtn').on('click', function() { setMedia(currentMediaIndex - 1); });
+    $('#nextImageBtn').on('click', function() { setMedia(currentMediaIndex + 1); });
+
+    // ---- شروع ----
+    if (mediaItems.length > 0) {
+        setMedia(0);
+    }
+});
+</script>
+
+
+
+{% endblock %}

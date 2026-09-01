@@ -1,0 +1,77 @@
+{% load static %}
+<!-- Header -->
+<style>
+  /* استایل مخصوص افکت تایپ‌رایتر */
+  #typed-text {
+    border-left: 2px solid #fff;
+    padding-right: 5px;   /* برای هماهنگی با متن فارسی */
+    animation: blink 0.7s step-end infinite;
+  }
+  @keyframes blink {
+    50% { border-color: transparent; }
+  }
+
+  .terminal-cursor {
+    font-family: 'Courier New', monospace;
+  }
+
+</style>
+
+<header class="bg-dark py-5">
+  
+  <div class="container px-4 px-lg-5 my-5">
+    <div class="text-center text-white">
+      <h1 class="display-4 fw-bolder">
+        <span id="typed-text"></span>
+      </h1>
+      <p class="lead fw-normal text-white-50 mb-0">خریدی شیک و مطمئن با بهترین قیمت‌ها</p>
+    </div>
+  </div>
+</header>
+
+<script>
+  (function() {
+    // لیست جملاتی که به‌صورت چرخشی تایپ می‌شوند
+    const texts = [
+      "به فروشگاه MD Dragon خوش آمدید",
+      "خرید و فروش انواع اکانت بازی",
+      "از کالاف تا روبلاکس"
+    ];
+
+    let textIndex = 0;       // اندیس جمله فعلی
+    let charIndex = 0;       // اندیس کاراکتر در جمله
+    let isDeleting = false;  // حالت پاک‌کردن یا تایپ
+    const typedElement = document.getElementById('typed-text');
+
+    function typeEffect() {
+      const currentText = texts[textIndex];
+
+      if (isDeleting) {
+        // پاک کردن کاراکتر
+        typedElement.textContent = currentText.substring(0, charIndex - 1);
+        charIndex--;
+      } else {
+        // اضافه کردن کاراکتر
+        typedElement.textContent = currentText.substring(0, charIndex + 1);
+        charIndex++;
+      }
+
+      // مدیریت وضعیت‌ها
+      if (!isDeleting && charIndex === currentText.length) {
+        // وقتی جمله کامل شد، بعد از ۱.۵ ثانیه شروع به پاک کردن کن
+        setTimeout(() => { isDeleting = true; }, 1500);
+      } else if (isDeleting && charIndex === 0) {
+        // وقتی جمله کاملاً پاک شد، برو به جمله بعدی و حالت تایپ را فعال کن
+        isDeleting = false;
+        textIndex = (textIndex + 1) % texts.length;
+      }
+
+      // سرعت تایپ و پاک‌کردن (پاک کردن سریع‌تره)
+      const speed = isDeleting ? 50 : 100;
+      setTimeout(typeEffect, speed);
+    }
+
+    // شروع افکت
+    typeEffect();
+  })();
+</script>

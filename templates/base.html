@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <title>MD Dragon shop.</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="فروشگاه آنلاین اکانت بازی" />
+    <meta name="author" content="" />
+    <!-- Favicon-->
+    <link rel="icon" type="image/x-icon" href="{% static 'assets/logo.png' %}" />
+    <!-- Bootstrap icons-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+    <!-- فونت فارسی Vazir (اختیاری، از CDN) -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet" />
+    <!-- استایل اختصاصی تم زرد و مشکی -->
+    <link href="{% static 'css/style2028.css' %}" rel="stylesheet" />
+
+    <script src="https://code.jquery.com/jquery-4.0.0.min.js"
+            integrity="sha256-OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao=" crossorigin="anonymous"></script>
+
+<style>
+
+input{
+    width: 250px;
+    border-color: blue;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+
+</style>
+
+
+
+
+
+
+</head>
+<body>
+
+{% include 'navbar.html' %}
+{% if messages %}
+</div>
+    <div class="messages-container">
+        {% for message in messages %}
+            <div class="custom-alert alert-{{ message.tags }}">
+                <div class="alert-content">
+                    <span>{{ message }}</span>
+                </div>
+
+                <button type="button" class="alert-close"
+                        onclick="closeAlert(this)">
+                    &times;
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+    {% block content %}
+
+    {% endblock %}
+
+
+
+    
+{% include 'footer.html' %}
+<!-- Bootstrap core JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- اسکریپت اختصاصی (در صورت نیاز) -->
+
+<!-- اسکریپت پایه (در صورت وجود) -->
+<!-- <script src="{% static 'js/scripts.js' %}"></script> -->
+ <script>
+    function closeAlert(button) {
+        const alert = button.closest('.custom-alert');
+
+        alert.classList.add('hide');
+
+        setTimeout(() => {
+            alert.remove();
+        }, 400);
+    }
+
+    document.querySelectorAll('.custom-alert').forEach(alert => {
+        setTimeout(() => {
+            alert.classList.add('hide');
+
+            setTimeout(() => {
+                alert.remove();
+            }, 400);
+
+        }, 4000);
+    });
+
+
+</script>
+</body>
+</html>

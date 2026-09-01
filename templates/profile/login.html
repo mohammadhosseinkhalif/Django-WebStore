@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'header.html' %}
+<style>
+
+input{
+    width: 250px;
+    border-color: blue;
+    padding: 10px;
+    border-radius: 5px;
+}
+.form-control{
+    width: 250px;
+    border-color: blue;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+</style>
+<br><br>
+<div class="container">
+    <div class="row">
+        <center>
+            <div class="col-10">
+                <div class="login-form">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        {{ form.as_p }}
+                        <br>
+                        <button type="submit" class="form-control">
+                            ورود
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </center>
+    </div>
+</div>
+<br><br>
+
+
+{% endblock %}
